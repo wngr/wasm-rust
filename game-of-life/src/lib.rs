@@ -43,6 +43,11 @@ pub struct Universe {
 }
 
 #[wasm_bindgen]
+pub struct Stats {
+    pub generation: usize,
+    pub changes: usize,
+}
+#[wasm_bindgen]
 impl Universe {
     pub fn new(width: usize, height: usize) -> Self {
         let mut rng = thread_rng();
@@ -74,7 +79,7 @@ impl Universe {
     pub fn render(&self) -> String {
         self.to_string()
     }
-    pub fn tick(&mut self) -> usize {
+    pub fn tick(&mut self) -> Stats {
         let mut next = self.cells.clone();
         for row in 0..self.height {
             for col in 0..self.width {
@@ -101,9 +106,18 @@ impl Universe {
                 next[idx] = next_cell;
             }
         }
+        let changes = self
+            .cells
+            .iter()
+            .zip(next.iter())
+            .filter_map(|(a, b)| if a != b { Some(1) } else { None })
+            .fold(0, |acc, v| acc + v);
         self.cells = next;
         self.generation += 1;
-        self.generation
+        Stats {
+            generation: self.generation,
+            changes,
+        }
     }
     fn get_idx(&self, row: usize, col: usize) -> usize {
         row * self.width + col
