@@ -46,6 +46,8 @@ pub struct Universe {
 pub struct Stats {
     pub generation: usize,
     pub changes: usize,
+    pub alive: usize,
+    pub dead: usize,
 }
 #[wasm_bindgen]
 impl Universe {
@@ -75,6 +77,17 @@ impl Universe {
             height,
             cells,
         }
+    }
+    pub fn width(&self) -> usize {
+        self.width
+    }
+
+    pub fn height(&self) -> usize {
+        self.height
+    }
+
+    pub fn cells(&self) -> *const Cell {
+        self.cells.as_ptr()
     }
     pub fn render(&self) -> String {
         self.to_string()
@@ -114,9 +127,12 @@ impl Universe {
             .fold(0, |acc, v| acc + v);
         self.cells = next;
         self.generation += 1;
+        let alive = self.cells.iter().fold(0, |acc, v| acc + *v as u8) as usize;
         Stats {
             generation: self.generation,
             changes,
+            alive,
+            dead: self.width * self.height - alive,
         }
     }
     fn get_idx(&self, row: usize, col: usize) -> usize {
